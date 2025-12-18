@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Client{% endblock %}
+
+{% block body %}
+    <div class="container py-5">
+        <h1 class="mb-4">Bienvenue {{ client.prenom }} {{ client.nom }}</h1>
+
+        {# Onglets Bootstrap #}
+        <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="infos-tab" data-bs-toggle="tab" data-bs-target="#infos" type="button" role="tab">Infos</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="commandes-tab" data-bs-toggle="tab" data-bs-target="#commandes" type="button" role="tab">Commandes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reservations-tab" data-bs-toggle="tab" data-bs-target="#reservations" type="button" role="tab">Réservations</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="dashboardTabsContent">
+            {# Onglet Infos #}
+            <div class="tab-pane fade show active" id="infos" role="tabpanel">
+                <ul class="list-group">
+                    <li class="list-group-item"><strong>Nom :</strong> {{ client.nom }}</li>
+                    <li class="list-group-item"><strong>Prénom :</strong> {{ client.prenom }}</li>
+                    <li class="list-group-item"><strong>Email :</strong> {{ client.email }}</li>
+                    <li class="list-group-item"><strong>Téléphone :</strong> {{ client.telephone }}</li>
+                    <li class="list-group-item"><strong>Adresse :</strong> {{ client.adresse }}</li>
+                </ul>
+            </div>
+
+
+            {# Onglet Commandes #}
+            <div class="tab-pane fade" id="commandes" role="tabpanel">
+                {% if commandes is not empty %}
+                    <table class="table table-striped mt-3">
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Montant Total</th>
+                            <th>Statut</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for commande in commandes %}
+                            <tr>
+                                <td>{{ commande.dateCommande|date('d/m/Y H:i') }}</td>
+                                <td>{{ commande.montantTotal }} $</td>
+                                <td>
+                                    {% if commande.status == 'en_attente' %}
+                                        <span class="badge bg-warning text-dark">En attente</span>
+                                    {% elseif commande.status == 'confirmee' %}
+                                        <span class="badge bg-success">Confirmée</span>
+                                    {% elseif commande.status == 'livree' %}
+                                        <span class="badge bg-info">Livrée</span>
+                                    {% elseif commande.status == 'annulee' %}
+                                        <span class="badge bg-danger">Annulée</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ commande.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="mt-3">Aucune commande passée.</p>
+                {% endif %}
+            </div>
+
+            {# Onglet Réservations #}
+            <div class="tab-pane fade" id="reservations" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>Mes réservations</h5>
+                    <a href="{{ path('app_reservation_new') }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle"></i> Nouvelle réservation
+                    </a>
+                </div>
+
+                {% if reservations is not empty %}
+                    <table class="table table-striped mt-3">
+                        <thead>
+                        <tr>
+                            <th>Date Réservation</th>
+                            <th>Nombre de personnes</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for reservation in reservations %}
+                            <tr>
+                                <td>{{ reservation.dateReservation|date('d/m/Y H:i') }}</td>
+                                <td>{{ reservation.nbPersonnes }}</td>
+                                <td>
+                                    {% if reservation.statut == 'confirmee' %}
+                                        <span class="badge bg-success">Confirmée</span>
+                                    {% elseif reservation.statut == 'en_attente' %}
+                                        <span class="badge bg-warning text-dark">En attente</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Annulée</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if reservation.statut != 'annulee' %}
+                                        <a href="{{ path('app_reservation_edit', {'id': reservation.id}) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">Aucune réservation passée.</p>
+                        <a href="{{ path('app_reservation_new') }}" class="btn btn-primary mt-2">
+                            Faire ma première réservation
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

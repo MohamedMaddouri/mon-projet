@@ -11,7 +11,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 class Client extends Utilisateur
 {
-
     #[ORM\Column(length: 20)]
     private ?string $telephone = null;
 
@@ -21,31 +20,25 @@ class Client extends Utilisateur
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateInscription = null;
 
-    #[ORM\OneToOne(mappedBy: 'client', cascade: ['persist', 'remove'])]
-    private ?Panier $panier = null;
-
     #[ORM\ManyToOne(inversedBy: 'clientsGeres')]
     private ?Administrateur $administrateur = null;
 
-    /**
-     * @var Collection<int, Réservation>
-     */
-    #[ORM\OneToMany(targetEntity: Réservation::class, mappedBy: 'client')]
-    private Collection $rServations;
+    #[ORM\OneToMany(mappedBy: 'client', targetEntity: Reservation::class)]
+    private Collection $reservations;
 
-    /**
-     * @var Collection<int, Commande>
-     */
-    #[ORM\OneToMany(targetEntity: Commande::class, mappedBy: 'client')]
+    #[ORM\OneToMany(mappedBy: 'client', targetEntity: Commande::class)]
     private Collection $commandes;
 
-    public function __construct()
-    {
-        $this->rServations = new ArrayCollection();
+    // ==== RELATION AVEC PANIER AJOUTÉE ====
+    #[ORM\OneToOne(mappedBy: 'client', targetEntity: Panier::class, cascade: ['persist', 'remove'])]
+    private ?Panier $panier = null;
+
+    public function __construct() {
+        $this->reservations = new ArrayCollection();
         $this->commandes = new ArrayCollection();
     }
 
-
+    // GETTERS & SETTERS
     public function getTelephone(): ?string
     {
         return $this->telephone;
@@ -54,7 +47,6 @@ class Client extends Utilisateur
     public function setTelephone(string $telephone): static
     {
         $this->telephone = $telephone;
-
         return $this;
     }
 
@@ -66,7 +58,6 @@ class Client extends Utilisateur
     public function setAdresse(?string $adresse): static
     {
         $this->adresse = $adresse;
-
         return $this;
     }
 
@@ -78,24 +69,6 @@ class Client extends Utilisateur
     public function setDateInscription(\DateTimeInterface $dateInscription): static
     {
         $this->dateInscription = $dateInscription;
-
-        return $this;
-    }
-
-    public function getPanier(): ?Panier
-    {
-        return $this->panier;
-    }
-
-    public function setPanier(Panier $panier): static
-    {
-        // set the owning side of the relation if necessary
-        if ($panier->getClient() !== $this) {
-            $panier->setClient($this);
-        }
-
-        $this->panier = $panier;
-
         return $this;
     }
 
@@ -107,43 +80,35 @@ class Client extends Utilisateur
     public function setAdministrateur(?Administrateur $administrateur): static
     {
         $this->administrateur = $administrateur;
-
         return $this;
     }
 
-    /**
-     * @return Collection<int, Réservation>
-     */
-    public function getRServations(): Collection
+    // RESERVATIONS
+    public function getReservations(): Collection
     {
-        return $this->rServations;
+        return $this->reservations;
     }
 
-    public function addRServation(Réservation $rServation): static
+    public function addReservation(Reservation $reservation): static
     {
-        if (!$this->rServations->contains($rServation)) {
-            $this->rServations->add($rServation);
-            $rServation->setClient($this);
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setClient($this);
         }
-
         return $this;
     }
 
-    public function removeRServation(Réservation $rServation): static
+    public function removeReservation(Reservation $reservation): static
     {
-        if ($this->rServations->removeElement($rServation)) {
-            // set the owning side to null (unless already changed)
-            if ($rServation->getClient() === $this) {
-                $rServation->setClient(null);
+        if ($this->reservations->removeElement($reservation)) {
+            if ($reservation->getClient() === $this) {
+                $reservation->setClient(null);
             }
         }
-
         return $this;
     }
 
-    /**
-     * @return Collection<int, Commande>
-     */
+    // COMMANDES
     public function getCommandes(): Collection
     {
         return $this->commandes;
@@ -155,19 +120,38 @@ class Client extends Utilisateur
             $this->commandes->add($commande);
             $commande->setClient($this);
         }
-
         return $this;
     }
 
     public function removeCommande(Commande $commande): static
     {
         if ($this->commandes->removeElement($commande)) {
-            // set the owning side to null (unless already changed)
             if ($commande->getClient() === $this) {
                 $commande->setClient(null);
             }
         }
+        return $this;
+    }
 
+    // ==== PANIER (NOUVEAU) ====
+    public function getPanier(): ?Panier
+    {
+        return $this->panier;
+    }
+
+    public function setPanier(?Panier $panier): static
+    {
+        // unset the owning side of the relation if necessary
+        if ($panier === null && $this->panier !== null) {
+            $this->panier->setClient(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($panier !== null && $panier->getClient() !== $this) {
+            $panier->setClient($this);
+        }
+
+        $this->panier = $panier;
         return $this;
     }
 }

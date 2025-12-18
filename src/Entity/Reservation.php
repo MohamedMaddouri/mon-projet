@@ -14,25 +14,66 @@ class Reservation
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\ManyToOne(inversedBy: 'reservations')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Client $client = null;
+
+    #[ORM\ManyToOne(inversedBy: 'reservations')]
+    private ?Administrateur $administrateur = null;
+
+    // ============ PROPRIÉTES AJOUTÉES ============
+
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateReservation = null;
 
     #[ORM\Column]
-    private ?int $nombrePersonnes = null;
+    private ?int $nbPersonnes = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $status = null;
+    private ?string $statut = 'en_attente';
 
-    #[ORM\Column(length: 50, nullable: true)]
-    private ?string $modePaiement = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private ?\DateTimeInterface $dateCreation = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $commentaire = null;
+    // Optionnel : si vous avez des restaurants
+    // #[ORM\ManyToOne(inversedBy: 'reservations')]
+    // private ?Restaurant $restaurant = null;
+
+    public function __construct()
+    {
+        $this->dateCreation = new \DateTime();
+    }
+
+    // ============ GETTERS ET SETTERS ============
 
     public function getId(): ?int
     {
         return $this->id;
     }
+
+    public function getClient(): ?Client
+    {
+        return $this->client;
+    }
+
+    public function setClient(?Client $client): static
+    {
+        $this->client = $client;
+        return $this;
+    }
+
+    public function getAdministrateur(): ?Administrateur
+    {
+        return $this->administrateur;
+    }
+
+    public function setAdministrateur(?Administrateur $administrateur): static
+    {
+        $this->administrateur = $administrateur;
+        return $this;
+    }
+
+    // === NOUVEAUX GETTERS/SETTERS ===
 
     public function getDateReservation(): ?\DateTimeInterface
     {
@@ -42,55 +83,41 @@ class Reservation
     public function setDateReservation(\DateTimeInterface $dateReservation): static
     {
         $this->dateReservation = $dateReservation;
-
         return $this;
     }
 
-    public function getNombrePersonnes(): ?int
+    public function getNbPersonnes(): ?int
     {
-        return $this->nombrePersonnes;
+        return $this->nbPersonnes;
     }
 
-    public function setNombrePersonnes(int $nombrePersonnes): static
+    public function setNbPersonnes(int $nbPersonnes): static
     {
-        $this->nombrePersonnes = $nombrePersonnes;
-
+        $this->nbPersonnes = $nbPersonnes;
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatut(): ?string
     {
-        return $this->status;
+        return $this->statut;
     }
 
-    public function setStatus(string $status): static
+    public function setStatut(string $statut): static
     {
-        $this->status = $status;
-
+        $this->statut = $statut;
         return $this;
     }
 
-    public function getModePaiement(): ?string
+    public function getDateCreation(): ?\DateTimeInterface
     {
-        return $this->modePaiement;
+        return $this->dateCreation;
     }
 
-    public function setModePaiement(?string $modePaiement): static
+    public function setDateCreation(\DateTimeInterface $dateCreation): static
     {
-        $this->modePaiement = $modePaiement;
-
+        $this->dateCreation = $dateCreation;
         return $this;
     }
 
-    public function getCommentaire(): ?string
-    {
-        return $this->commentaire;
-    }
 
-    public function setCommentaire(?string $commentaire): static
-    {
-        $this->commentaire = $commentaire;
-
-        return $this;
-    }
 }

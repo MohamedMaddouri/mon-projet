@@ -31,9 +31,12 @@ security:
 
   access_control:
     - { path: ^/admin, roles: ROLE_ADMIN }
-    - { path: ^/client, roles: ROLE_CLIENT }
+
+    - { path: ^/client/dashboard, roles: ROLE_CLIENT }
+
     - { path: ^/login$, roles: PUBLIC_ACCESS }
-    - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/register, roles: PUBLIC_ACCESS }
+    - { path: ^/$, roles: PUBLIC_ACCESS }
 
 when@test:
   security:

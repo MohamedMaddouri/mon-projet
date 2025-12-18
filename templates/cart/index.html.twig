@@ -1,0 +1,76 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My Cart{% endblock %}
+
+{% block body %}
+    <div class="container py-5">
+        <h2 class="mb-4 text-center">🛒 Mon Panier</h2>
+
+        {% if cart is empty %}
+            <div class="alert alert-warning text-center">
+                Votre panier est vide.
+            </div>
+            <div class="text-center">
+                <a href="{{ path('home') }}" class="btn btn-primary">Retour au menu</a>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="table table-bordered text-center align-middle">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Produit</th>
+                        <th>Prix ($)</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in cart %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.price }} $</td>
+                            <td>
+                                <a href="{{ path('cart_remove', {'index': loop.index0}) }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Supprimer ce produit ?')">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h4 class="text-end mb-0">
+                        Total: <strong class="text-primary">{{ total }} $</strong>
+                    </h4>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <div>
+                    <a href="{{ path('home') }}" class="btn btn-secondary me-2">
+                        <i class="bi bi-arrow-left"></i> Continuer mes achats
+                    </a>
+                    <a href="{{ path('cart_clear') }}" class="btn btn-warning"
+                       onclick="return confirm('Vider tout le panier ?')">
+                        <i class="bi bi-x-circle"></i> Vider le panier
+                    </a>
+                </div>
+                <a href="{{ path('cart_checkout') }}" class="btn btn-success btn-lg"
+                   onclick="return confirm('Confirmer la commande ?')">
+                    <i class="bi bi-check-circle"></i> Passer la commande
+                </a>
+            </div>
+
+            <div class="alert alert-info mt-4">
+                <i class="bi bi-info-circle"></i>
+                <strong>Information :</strong> Après confirmation, votre commande sera visible dans votre dashboard.
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

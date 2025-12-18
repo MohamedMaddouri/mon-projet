@@ -16,23 +16,31 @@ class Panier
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $montantTotal = null;
 
-    #[ORM\OneToOne(inversedBy: 'panier', cascade: ['persist', 'remove'])]
+    // 🔗 Panier ↔ Client (1–1)
+    #[ORM\OneToOne(inversedBy: 'panier', targetEntity: Client::class, cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
-    private ?client $client = null;
+    private ?Client $client = null;
 
     /**
      * @var Collection<int, LignePanier>
      */
-    #[ORM\OneToMany(targetEntity: LignePanier::class, mappedBy: 'panier', orphanRemoval: true)]
+    #[ORM\OneToMany(
+        mappedBy: 'panier',
+        targetEntity: LignePanier::class,
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
     private Collection $lignePaniers;
 
     public function __construct()
     {
         $this->lignePaniers = new ArrayCollection();
     }
+
+    // -------------------- GETTERS / SETTERS --------------------
 
     public function getId(): ?int
     {
@@ -44,22 +52,20 @@ class Panier
         return $this->montantTotal;
     }
 
-    public function setMontantTotal(string $montantTotal): static
+    public function setMontantTotal(?string $montantTotal): self
     {
         $this->montantTotal = $montantTotal;
-
         return $this;
     }
 
-    public function getClient(): ?client
+    public function getClient(): ?Client
     {
         return $this->client;
     }
 
-    public function setClient(client $client): static
+    public function setClient(Client $client): self
     {
         $this->client = $client;
-
         return $this;
     }
 
@@ -71,7 +77,7 @@ class Panier
         return $this->lignePaniers;
     }
 
-    public function addLignePanier(LignePanier $lignePanier): static
+    public function addLignePanier(LignePanier $lignePanier): self
     {
         if (!$this->lignePaniers->contains($lignePanier)) {
             $this->lignePaniers->add($lignePanier);
@@ -81,10 +87,9 @@ class Panier
         return $this;
     }
 
-    public function removeLignePanier(LignePanier $lignePanier): static
+    public function removeLignePanier(LignePanier $lignePanier): self
     {
         if ($this->lignePaniers->removeElement($lignePanier)) {
-            // set the owning side to null (unless already changed)
             if ($lignePanier->getPanier() === $this) {
                 $lignePanier->setPanier(null);
             }
