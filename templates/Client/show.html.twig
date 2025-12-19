@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ produit.nom }}{% endblock %}
+
+{% block body %}
+    <div class="container py-5">
+        <div class="row">
+            {# 1. Product Image #}
+            <div class="col-md-6">
+                {% set folder = (produit.category.nom == 'Food') ? 'food' : 'drink' %}
+                {# We use a placeholder because you don't have the images yet #}
+                <img src="{{ asset('images/' ~ folder ~ '/' ~ produit.nom|lower|replace({' ': '_'}) ~ '.jpg') }}"
+                     class="img-fluid rounded shadow w-100"
+                     alt="{{ produit.nom }}"
+                     onerror="this.src='https://via.placeholder.com/600x400?text={{ produit.nom|replace({' ': '+'}) }}'">
+            </div>
+
+            {# 2. Product Details #}
+            <div class="col-md-6">
+                <h1 class="display-4 fw-bold">{{ produit.nom }}</h1>
+                <h3 class="text-success mb-4">{{ produit.prix }} €</h3>
+
+                <div class="mb-4">
+                    <h5>Status:</h5>
+                    {% if produit.disponible %}
+                        <span class="badge bg-success p-2">✅ Disponible</span>
+                    {% else %}
+                        <span class="badge bg-danger p-2">❌ Non disponible</span>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <h5>Description:</h5>
+                    <p class="lead text-muted">{{ produit.description }}</p>
+                </div>
+
+                <hr>
+
+                <div class="d-flex gap-3 mt-4">
+                    <a href="{{ path('cart_add', {'id': produit.id}) }}" class="btn btn-success btn-lg px-5">
+                        Add to Cart
+                    </a>
+                    <a href="{{ path('home') }}" class="btn btn-outline-secondary btn-lg">
+                        Back to Menu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

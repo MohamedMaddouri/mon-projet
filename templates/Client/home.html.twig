@@ -3,11 +3,12 @@
 {% block title %}Welcome to Resto!{% endblock %}
 
 {% block body %}
-    {# Navbar avec logo et panier #}
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    {# Navbar #}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="{{ asset('images/logo/logo.png') }}" alt="Resto Logo" class="img-fluid" style="max-height:100px;">
+            <a class="navbar-brand d-flex align-items-center" href="{{ path('home') }}">
+                <img src="{{ asset('images/logo/logo.png') }}" alt="Resto" class="img-fluid" style="max-height:50px; filter: brightness(0) invert(1);" onerror="this.src='https://placehold.co/120x50?text=RESTO'">
+                <span class="ms-2 fw-bold">RESTO</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -15,21 +16,21 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link" href="#food">Food</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#drink">Drink</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#drink">Drinks</a></li>
                     <li class="nav-item"><a class="nav-link" href="#search">Search</a></li>
                     <li class="nav-item me-3">
-                        <a class="btn btn-outline-primary position-relative" href="{{ path('cart') }}">
+                        <a class="btn btn-outline-light position-relative" href="{{ path('cart') }}">
                             <i class="bi bi-cart"></i> Cart
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                {{ cart|length|default(0) }}
+                                {{ cart|length }}
                             </span>
                         </a>
                     </li>
                     <li class="nav-item">
                         {% if app.user %}
-                            <a class="btn btn-primary text-white" href="{{ path('app_client_dashboard') }}">Mon Dashboard</a>
+                            <a class="btn btn-primary text-white px-4" href="{{ path('app_client_dashboard') }}">Dashboard</a>
                         {% else %}
-                            <a class="btn btn-primary text-white" href="{{ path('app_login') }}">Login</a>
+                            <a class="btn btn-primary text-white px-4" href="{{ path('app_login') }}">Login</a>
                         {% endif %}
                     </li>
                 </ul>
@@ -37,147 +38,96 @@
         </div>
     </nav>
 
-    {# Carrousel #}
+    {# Carousel #}
     <div id="carouselResto" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-inner">
             <div class="carousel-item active">
-                <img src="{{ asset('images/food/pizza.jpg') }}" class="d-block w-100" alt="Delicious Food">
-                <div class="carousel-caption d-none d-md-block">
-                    <h2>Delicious Food</h2>
-                    <p>Discover our special dishes every day!</p>
+                <img src="https://images.unsplash.com/photo-1514326640560-7d063ef2aed5?q=80&w=1480" class="d-block w-100" style="height: 400px; object-fit: cover;" alt="Food">
+                <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.5); border-radius: 10px;">
+                    <h2 class="display-4 fw-bold">Delicious Food</h2>
                 </div>
             </div>
             <div class="carousel-item">
-                <img src="{{ asset('images/drink/coffee.jpg') }}" class="d-block w-100" alt="Refreshing Drinks">
-                <div class="carousel-caption d-none d-md-block">
-                    <h2>Refreshing Drinks</h2>
-                    <p>Enjoy a variety of beverages!</p>
-                </div>
-            </div>
-            <div class="carousel-item">
-                <img src="{{ asset('images/food/burger.jpg') }}" class="d-block w-100" alt="Cozy Atmosphere">
-                <div class="carousel-caption d-none d-md-block">
-                    <h2>Cozy Atmosphere</h2>
-                    <p>Relax and enjoy your meal.</p>
+                <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=1514" class="d-block w-100" style="height: 400px; object-fit: cover;" alt="Drinks">
+                <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.5); border-radius: 10px;">
+                    <h2 class="display-4 fw-bold">Refreshing Moments</h2>
                 </div>
             </div>
         </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#carouselResto" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carouselResto" data-bs-slide="next">
-            <span class="carousel-control-next-icon"></span>
-        </button>
     </div>
 
-    {# Food Section #}
+    {# 1. Food Menu Section #}
     <section id="food" class="container py-5">
-        <h2 class="mb-4 text-center">Food Menu</h2>
+        <h2 class="mb-5 text-center section-title">Food Menu</h2>
         <div class="row g-4">
             {% for food in foods %}
                 <div class="col-md-4">
-                    <div class="card shadow-sm hover-zoom">
-                        <img src="{{ asset('images/food/' ~ food.image) }}" class="card-img-top" alt="{{ food.name }}">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">{{ food.name }}</h5>
-                            <p class="card-text">Price: ${{ food.price }}</p>
-                            <a href="{{ path('cart_add', {'name': food.name, 'price': food.price}) }}" class="btn btn-success mt-2 w-100">
-                                Add to Cart
-                            </a>
-                        </div>
-                    </div>
+                    {% include 'client/_product_card.html.twig' with {'product': food} %}
                 </div>
             {% endfor %}
         </div>
     </section>
 
-    {# Drink Section #}
+    {# 2. Drink Menu Section #}
     <section id="drink" class="bg-light py-5">
         <div class="container">
-            <h2 class="mb-4 text-center">Drinks</h2>
+            <h2 class="mb-5 text-center section-title">Our Drink Selection</h2>
             <div class="row g-4">
                 {% for drink in drinks %}
                     <div class="col-md-3">
-                        <div class="card shadow-sm hover-zoom">
-                            <img src="{{ asset('images/drink/' ~ drink.image) }}" class="card-img-top" alt="{{ drink.name }}">
-                            <div class="card-body text-center">
-                                <h5 class="card-title">{{ drink.name }}</h5>
-                                <p>Price: ${{ drink.price }}</p>
-                                <a href="{{ path('cart_add', {'name': drink.name, 'price': drink.price}) }}" class="btn btn-success mt-2 w-100">
-                                    Add to Cart
-                                </a>
-                            </div>
-                        </div>
+                        {% include 'client/_product_card.html.twig' with {'product': drink} %}
                     </div>
                 {% endfor %}
             </div>
         </div>
     </section>
 
-    {# Search Section avec filtres #}
+    {# 3. Search Section #}
     <section id="search" class="container py-5">
-        <h2 class="mb-3 text-center">Search Your Favorite Dish</h2>
-        <form class="row g-3 justify-content-center mb-4" action="{{ path('home') }}" method="GET" style="max-width:800px;margin:auto;">
+        <h2 class="mb-4 text-center">Find Your Favorite Dish</h2>
+        <form class="row g-3 justify-content-center mb-5 p-4 bg-white shadow-sm rounded border" action="{{ path('home') }}#search" method="GET">
             <div class="col-md-4">
-                <input class="form-control" type="search" name="q" placeholder="Search food or drink..." value="{{ app.request.query.get('q') }}">
+                <input class="form-control" type="search" name="q" placeholder="Name..." value="{{ app.request.query.get('q') }}">
             </div>
             <div class="col-md-2">
                 <select class="form-select" name="category">
-                    <option value="">All Categories</option>
-                    <option value="food" {% if app.request.query.get('category')=='food' %}selected{% endif %}>Food</option>
-                    <option value="drink" {% if app.request.query.get('category')=='drink' %}selected{% endif %}>Drink</option>
+                    <option value="">Category</option>
+                    <option value="Food" {% if app.request.query.get('category') == 'Food' %}selected{% endif %}>Food</option>
+                    <option value="Drinks" {% if app.request.query.get('category') == 'Drinks' %}selected{% endif %}>Drinks</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <select class="form-select" name="alphabetical">
-                    <option value="">Alphabetical</option>
-                    <option value="asc" {% if app.request.query.get('alphabetical')=='asc' %}selected{% endif %}>A → Z</option>
-                    <option value="desc" {% if app.request.query.get('alphabetical')=='desc' %}selected{% endif %}>Z → A</option>
+                    <option value="">Order</option>
+                    <option value="asc" {% if app.request.query.get('alphabetical') == 'asc' %}selected{% endif %}>A-Z</option>
+                    <option value="desc" {% if app.request.query.get('alphabetical') == 'desc' %}selected{% endif %}>Z-A</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <select class="form-select" name="price">
-                    <option value="">Price</option>
-                    <option value="low" {% if app.request.query.get('price')=='low' %}selected{% endif %}>Low → High</option>
-                    <option value="high" {% if app.request.query.get('price')=='high' %}selected{% endif %}>High → Low</option>
-                </select>
-            </div>
-            <div class="col-md-2 d-grid">
-                <button class="btn btn-success" type="submit">Search</button>
+            <div class="col-md-1 d-grid">
+                <button class="btn btn-success" type="submit"><i class="bi bi-search"></i></button>
             </div>
         </form>
 
-        {# Résultats filtrés #}
         <div class="row g-4">
             {% for item in results %}
                 <div class="col-md-3">
-                    <div class="card shadow-sm hover-zoom">
-                        {% if item.image in ['pizza.jpg','burger.jpg','pasta.jpg'] %}
-                            <img src="{{ asset('images/food/' ~ item.image) }}" class="card-img-top" alt="{{ item.name }}">
-                        {% else %}
-                            <img src="{{ asset('images/drink/' ~ item.image) }}" class="card-img-top" alt="{{ item.name }}">
-                        {% endif %}
-                        <div class="card-body text-center">
-                            <h5 class="card-title">{{ item.name }}</h5>
-                            <p>Price: ${{ item.price }}</p>
-                            <a href="{{ path('cart_add', {'name': item.name, 'price': item.price}) }}" class="btn btn-success mt-2 w-100">
-                                Add to Cart
-                            </a>
-                        </div>
-                    </div>
+                    {% include 'client/_product_card.html.twig' with {'product': item} %}
                 </div>
             {% else %}
-                <p class="text-center">No results found.</p>
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted fs-4">No results found.</p>
+                </div>
             {% endfor %}
         </div>
     </section>
 
-    {# Hover effect #}
     <style>
-        .hover-zoom:hover {
-            transform: scale(1.05);
-            transition: transform 0.3s ease;
-        }
+        .hover-zoom { transition: all 0.3s ease; }
+        .hover-zoom:hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+        .hover-zoom img { height: 220px; object-fit: cover; }
+        .section-title { position: relative; padding-bottom: 15px; font-weight: bold; }
+        .section-title::after { content: ''; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 70px; height: 4px; background-color: #198754; border-radius: 2px; }
+        html { scroll-behavior: smooth; }
+        .card-title { min-height: 50px; display: flex; align-items: center; justify-content: center; }
     </style>
-
 {% endblock %}

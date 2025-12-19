@@ -36,6 +36,9 @@ class Produit
     #[ORM\JoinColumn(nullable: false)]
     private ?Administrateur $administrateur = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
+
     public function getId(): ?int { return $this->id; }
     public function getNom(): ?string { return $this->nom; }
     public function setNom(string $nom): static { $this->nom = $nom; return $this; }
@@ -54,4 +57,16 @@ class Produit
 
     public function getAdministrateur(): ?Administrateur { return $this->administrateur; }
     public function setAdministrateur(?Administrateur $administrateur): static { $this->administrateur = $administrateur; return $this; }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): static
+    {
+        $this->image = $image;
+
+        return $this;
+    }
 }

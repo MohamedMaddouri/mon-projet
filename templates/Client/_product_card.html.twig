@@ -1,0 +1,35 @@
+{# templates/client/_product_card.html.twig #}
+<div class="card shadow-sm hover-zoom h-100 border-0">
+    {# Link to Detail Page #}
+    <a href="{{ path('product_show', {'id': product.id}) }}">
+        {% set folder = (product.category and product.category.nom == 'Food') ? 'food' : 'drink' %}
+
+        {# Logic: Use database image if exists, otherwise try local naming, otherwise placeholder #}
+        <img src="{{ product.image ? asset('uploads/products/' ~ product.image) : asset('images/' ~ folder ~ '/' ~ product.nom|lower|replace({' ': '_'}) ~ '.jpg') }}"
+             class="card-img-top"
+             alt="{{ product.nom }}"
+             onerror="this.src='https://placehold.co/400x300?text={{ product.nom|url_encode }}'">
+    </a>
+
+    <div class="card-body text-center d-flex flex-column">
+        <a href="{{ path('product_show', {'id': product.id}) }}" class="text-decoration-none text-dark">
+            <h5 class="card-title fw-bold">{{ product.nom }}</h5>
+        </a>
+
+
+
+        <p class="card-text text-success fw-bold fs-5 mt-auto">{{ product.prix }} €</p>
+
+        <div class="mb-3">
+            {% if product.disponible %}
+                <span class="badge bg-light text-success border border-success">Disponible</span>
+            {% else %}
+                <span class="badge bg-light text-danger border border-danger">Epuisé</span>
+            {% endif %}
+        </div>
+
+        <a href="{{ path('cart_add', {'id': product.id}) }}" class="btn btn-success w-100">
+            <i class="bi bi-cart-plus"></i> Add to Cart
+        </a>
+    </div>
+</div>

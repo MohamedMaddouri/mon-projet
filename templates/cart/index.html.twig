@@ -6,7 +6,7 @@
     <div class="container py-5">
         <h2 class="mb-4 text-center">🛒 Mon Panier</h2>
 
-        {% if cart is empty %}
+        {% if items is empty %}
             <div class="alert alert-warning text-center">
                 Votre panier est vide.
             </div>
@@ -20,18 +20,30 @@
                     <tr>
                         <th>#</th>
                         <th>Produit</th>
-                        <th>Prix ($)</th>
+                        <th>Prix Unitaire</th>
+                        <th>Quantité</th>
+                        <th>Sous-total</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for item in cart %}
+                    {% for item in items %}
                         <tr>
                             <td>{{ loop.index }}</td>
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.price }} $</td>
                             <td>
-                                <a href="{{ path('cart_remove', {'index': loop.index0}) }}"
+                                <strong>{{ item.produit.nom }}</strong>
+                            </td>
+                            <td>{{ item.produit.prix }} €</td>
+                            <td>
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <a href="{{ path('cart_decrease', {'id': item.produit.id}) }}" class="btn btn-outline-secondary btn-sm me-2">-</a>
+                                    <span class="badge bg-light text-dark border px-3 py-2">{{ item.quantity }}</span>
+                                    <a href="{{ path('cart_increase', {'id': item.produit.id}) }}" class="btn btn-outline-secondary btn-sm ms-2">+</a>
+                                </div>
+                            </td>
+                            <td>{{ item.produit.prix * item.quantity }} €</td>
+                            <td>
+                                <a href="{{ path('cart_remove', {'id': item.produit.id}) }}"
                                    class="btn btn-danger btn-sm"
                                    onclick="return confirm('Supprimer ce produit ?')">
                                     <i class="bi bi-trash"></i> Supprimer
@@ -46,7 +58,7 @@
             <div class="card mt-4">
                 <div class="card-body">
                     <h4 class="text-end mb-0">
-                        Total: <strong class="text-primary">{{ total }} $</strong>
+                        Total à payer: <strong class="text-primary">{{ total }} €</strong>
                     </h4>
                 </div>
             </div>
@@ -55,10 +67,6 @@
                 <div>
                     <a href="{{ path('home') }}" class="btn btn-secondary me-2">
                         <i class="bi bi-arrow-left"></i> Continuer mes achats
-                    </a>
-                    <a href="{{ path('cart_clear') }}" class="btn btn-warning"
-                       onclick="return confirm('Vider tout le panier ?')">
-                        <i class="bi bi-x-circle"></i> Vider le panier
                     </a>
                 </div>
                 <a href="{{ path('cart_checkout') }}" class="btn btn-success btn-lg"

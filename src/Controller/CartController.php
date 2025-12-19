@@ -2,11 +2,10 @@
 
 namespace App\Controller;
 
-use App\Entity\Panier;
-use App\Entity\LignePanier;
 use App\Entity\Commande;
 use App\Entity\LigneCommande;
 use App\Entity\Produit;
+use App\Repository\ProduitRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -16,47 +15,39 @@ use Symfony\Component\Routing\Annotation\Route;
 class CartController extends AbstractController
 {
     #[Route('/cart', name: 'cart')]
-    public function index(SessionInterface $session): Response
+    public function index(SessionInterface $session, ProduitRepository $produitRepo): Response
     {
-        // Récupérer le panier depuis la session
         $cart = $session->get('cart', []);
-
-        // Calculer le total
+        $cartData = [];
         $total = 0;
-        foreach ($cart as $item) {
-            $quantity = $item['quantity'] ?? 1;
-            $total += $item['price'] * $quantity;
+
+        foreach ($cart as $id => $quantity) {
+            $produit = $produitRepo->find($id);
+            if ($produit) {
+                $cartData[] = [
+                    'produit' => $produit,
+                    'quantity' => $quantity
+                ];
+                $total += $produit->getPrix() * $quantity;
+            }
         }
 
         return $this->render('cart/index.html.twig', [
-            'cart' => $cart,
+            'items' => $cartData,
             'total' => $total,
         ]);
     }
 
-    #[Route('/cart/add/{name}/{price}', name: 'cart_add')]
-    public function add(SessionInterface $session, EntityManagerInterface $em, $name, $price): Response
+    #[Route('/cart/add/{id}', name: 'cart_add')]
+    public function add(Produit $produit, SessionInterface $session): Response
     {
-        // 1. Ajouter à la session
         $cart = $session->get('cart', []);
+        $id = $produit->getId();
 
-        // Vérifier si le produit existe déjà
-        $found = false;
-        foreach ($cart as &$item) {
-            if ($item['name'] === $name) {
-                $item['quantity'] = ($item['quantity'] ?? 1) + 1;
-                $found = true;
-                break;
-            }
-        }
-
-        // Si non trouvé, ajouter nouveau
-        if (!$found) {
-            $cart[] = [
-                'name' => $name,
-                'price' => (float)$price,
-                'quantity' => 1
-            ];
+        if (!empty($cart[$id])) {
+            $cart[$id]++;
+        } else {
+            $cart[$id] = 1;
         }
 
         $session->set('cart', $cart);
@@ -64,131 +55,88 @@ class CartController extends AbstractController
         return $this->redirectToRoute('home');
     }
 
-    #[Route('/cart/remove/{index}', name: 'cart_remove')]
-    public function remove(SessionInterface $session, $index): Response
-    {
-        $cart = $session->get('cart', []);
-        if(isset($cart[$index])){
-            unset($cart[$index]);
-            $cart = array_values($cart);
-            $session->set('cart', $cart);
-        }
-
-        return $this->redirectToRoute('cart');
-    }
-
-    #[Route('/cart/clear', name: 'cart_clear')]
-    public function clear(SessionInterface $session): Response
-    {
-        $session->set('cart', []);
-        return $this->redirectToRoute('cart');
-    }
-
-    #[Route('/cart/checkout', name: 'cart_checkout')]
-    public function checkout(SessionInterface $session, EntityManagerInterface $em): Response
-    {
-        // 1. Vérifications rapides
-        if (!$this->getUser()) {
-            $this->addFlash('error', 'Connectez-vous d\'abord.');
-            return $this->redirectToRoute('app_login');
-        }
-
-        $cart = $session->get('cart', []);
-        if (empty($cart)) {
-            $this->addFlash('warning', 'Panier vide.');
-            return $this->redirectToRoute('cart');
-        }
-
-        $client = $this->getUser();
-
-        // 2. Créer commande
-        $commande = new Commande();
-        $commande->setClient($client);
-        $commande->setDateCommande(new \DateTime());
-        $commande->setStatus('en_attente');
-        $commande->setModePaiement('à la livraison');
-        $commande->setDateLivraison((new \DateTime())->modify('+1 day'));
-        $commande->setAddresseLivraison($client->getAdresse() ?? '');
-
-        $total = 0;
-
-        // 3. Récupérer tous les produits en une requête (optimisation)
-        $produitNoms = array_column($cart, 'name');
-        $produits = $em->getRepository(Produit::class)->findBy(['nom' => $produitNoms]);
-
-        // Index pour accès rapide
-        $produitsIndex = [];
-        foreach ($produits as $produit) {
-            $produitsIndex[$produit->getNom()] = $produit;
-        }
-
-        // 4. Créer lignes de commande
-        foreach ($cart as $item) {
-            if (isset($produitsIndex[$item['name']])) {
-                $produit = $produitsIndex[$item['name']];
-                $quantite = $item['quantity'] ?? 1;
-
-                $ligneCommande = new LigneCommande();
-                $ligneCommande->setCommande($commande);
-                $ligneCommande->setProduit($produit);
-                $ligneCommande->setQuantite($quantite);
-                $ligneCommande->setPrixUnitaire($item['price']);
-
-                $total += $item['price'] * $quantite;
-
-                $em->persist($ligneCommande);
-                $commande->addLigneCommande($ligneCommande);
-            }
-        }
-
-        // 5. Sauvegarder
-        $commande->setMontantTotal((string)$total);
-        $em->persist($commande);
-        $em->flush();
-
-        // 6. Vider panier et rediriger
-        $session->set('cart', []);
-
-        $this->addFlash('success', 'Commande #' . $commande->getId() . ' validée !');
-        return $this->redirectToRoute('app_client_dashboard');
-    }
-
-    // Routes optionnelles pour gérer les quantités
-    #[Route('/cart/increase/{name}/{price}', name: 'cart_increase')]
-    public function increase(SessionInterface $session, $name, $price): Response
+    #[Route('/cart/remove/{id}', name: 'cart_remove')]
+    public function remove($id, SessionInterface $session): Response
     {
         $cart = $session->get('cart', []);
 
-        foreach ($cart as &$item) {
-            if ($item['name'] === $name) {
-                $item['quantity'] = ($item['quantity'] ?? 1) + 1;
-                break;
-            }
+        if (!empty($cart[$id])) {
+            unset($cart[$id]);
         }
 
         $session->set('cart', $cart);
         return $this->redirectToRoute('cart');
     }
 
-    #[Route('/cart/decrease/{name}', name: 'cart_decrease')]
-    public function decrease(SessionInterface $session, $name): Response
+    #[Route('/cart/checkout', name: 'cart_checkout')]
+    public function checkout(SessionInterface $session, EntityManagerInterface $em, ProduitRepository $produitRepo): Response
     {
-        $cart = $session->get('cart', []);
+        if (!$this->getUser()) {
+            $this->addFlash('error', 'Please login to complete your order.');
+            return $this->redirectToRoute('app_login');
+        }
 
-        foreach ($cart as $key => &$item) {
-            if ($item['name'] === $name) {
-                $currentQty = $item['quantity'] ?? 1;
-                if ($currentQty > 1) {
-                    $item['quantity'] = $currentQty - 1;
-                } else {
-                    // Si quantité = 1, supprimer l'article
-                    unset($cart[$key]);
-                    $cart = array_values($cart);
-                }
-                break;
+        $cart = $session->get('cart', []);
+        if (empty($cart)) {
+            $this->addFlash('warning', 'Your cart is empty.');
+            return $this->redirectToRoute('cart');
+        }
+
+        $client = $this->getUser();
+        $commande = new Commande();
+        $commande->setClient($client);
+        $commande->setDateCommande(new \DateTime());
+        $commande->setStatus('Pending');
+        $commande->setModePaiement('Cash on delivery');
+
+        $total = 0;
+
+        foreach ($cart as $id => $quantity) {
+            $produit = $produitRepo->find($id);
+            if ($produit) {
+                $ligne = new LigneCommande();
+                $ligne->setProduit($produit);
+                $ligne->setQuantite($quantity);
+                $ligne->setPrixUnitaire($produit->getPrix());
+                $ligne->setCommande($commande);
+
+                $total += $produit->getPrix() * $quantity;
+                $em->persist($ligne);
             }
         }
 
+        $commande->setMontantTotal((string)$total);
+        $em->persist($commande);
+        $em->flush();
+
+        $session->set('cart', []);
+        $this->addFlash('success', 'Order confirmed!');
+
+        return $this->redirectToRoute('app_client_dashboard');
+    }
+
+    #[Route('/cart/increase/{id}', name: 'cart_increase')]
+    public function increase($id, SessionInterface $session): Response
+    {
+        $cart = $session->get('cart', []);
+        if (!empty($cart[$id])) {
+            $cart[$id]++;
+        }
+        $session->set('cart', $cart);
+        return $this->redirectToRoute('cart');
+    }
+
+    #[Route('/cart/decrease/{id}', name: 'cart_decrease')]
+    public function decrease($id, SessionInterface $session): Response
+    {
+        $cart = $session->get('cart', []);
+        if (!empty($cart[$id])) {
+            if ($cart[$id] > 1) {
+                $cart[$id]--;
+            } else {
+                unset($cart[$id]);
+            }
+        }
         $session->set('cart', $cart);
         return $this->redirectToRoute('cart');
     }
